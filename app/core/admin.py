@@ -8,7 +8,7 @@ from core import models
 class UserAdmin(BaseUserAdmin):
     ordering = ['id']
     list_display = ['email', 'name']
-    # changing user model
+    # changing user model, fields to be displayed for each user listed
     fieldsets = (
         # first argument is title of the section
         (None, {'fields': ('email', 'password')}),
