@@ -2,6 +2,7 @@ FROM python:3.7-alpine
 
 ENV PYTHONUNBUFFERED 1
 
+# copy from local file system onto Docker image
 COPY ./requirements.txt /requirements.txt
 RUN apk add --update --no-cache postgresql-client
 # install the temp dependencies required while we run the requirements
