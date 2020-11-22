@@ -17,7 +17,7 @@ def detail_url(recipe_id):
     return reverse('recipe:recipe-detail', args=[recipe_id])
 
 
-def sampel_tag(user, name='Main Course'):
+def sample_tag(user, name='Main Course'):
     return Tag.objects.create(user=user, name=name)
 
 
@@ -89,7 +89,7 @@ class PrivateRecipesApiTest(TestCase):
     def test_view_recipe_detail(self):
         recipe = sample_recipe(user=self.user)
         # add into object (database) with many to many relationship
-        recipe.tags.add(sampel_tag(user=self.user))
+        recipe.tags.add(sample_tag(user=self.user))
         recipe.ingredients.add(sampel_ingredient(user=self.user))
 
         url = detail_url(recipe.id)
@@ -116,8 +116,8 @@ class PrivateRecipesApiTest(TestCase):
 
     def test_create_recipe_with_tag(self):
         """ Test creating recipe with tags """
-        tag1 = sampel_tag(user=self.user, name='Vegan')
-        tag2 = sampel_tag(user=self.user, name='Dessert')
+        tag1 = sample_tag(user=self.user, name='Vegan')
+        tag2 = sample_tag(user=self.user, name='Dessert')
 
         payload = {
             'title': 'Avocado lime cheesecake',
@@ -155,3 +155,41 @@ class PrivateRecipesApiTest(TestCase):
         self.assertEqual(ingredients.count(), 2)
         self.assertIn(ingredient1, ingredients)
         self.assertIn(ingredient2, ingredients)
+
+    def test_partial_update_recipe(self):
+        """ Test updating a recipe with patch """
+        recipe = sample_recipe(user=self.user)
+        recipe.tags.add(sample_tag(user=self.user))
+        new_tag = sample_tag(user=self.user, name='Currey')
+
+        payload = {'title': 'Chicken tikka', 'tags': [new_tag.id]}
+
+        url = detail_url(recipe.id)
+        self.client.patch(url, payload)
+
+        recipe.refresh_from_db()
+        self.assertEqual(recipe.title, payload['title'])
+        tags = recipe.tags.all()
+        self.assertEqual(len(tags), 1)
+        self.assertIn(new_tag, tags)
+
+    def test_full_update_recipe(self):
+        """ Test updating a recipe with put """
+        recipe = sample_recipe(user=self.user)
+        recipe.tags.add(sample_tag(user=self.user))
+
+        payload = {
+            'title': 'Spaghetti Carbonara',
+            'time_minutes': 25,
+            'price': 5.00
+        }
+        url = detail_url(recipe.id)
+        self.client.put(url, payload)
+
+        recipe.refresh_from_db()
+        self.assertEqual(recipe.title, payload['title'])
+        self.assertEqual(recipe.time_minutes, payload['time_minutes'])
+        self.assertEqual(recipe.price, payload['price'])
+
+        tags = recipe.tags.all()
+        self.assertEqual(len(tags), 0)
